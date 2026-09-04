@@ -69,17 +69,17 @@
                                   "server":  "ggdns",
                                   "action":  "route"
                               },
+                             {
+                                  "rule_set":  "geosite-cn",
+                                  "server":  "local",
+                                  "action":  "route"
+                              },
                               {
                                   "query_type":  [
                                                      "A",
                                                      "AAAA"
                                                  ],
                                   "server":  "fakeip",
-                                  "action":  "route"
-                              },
-                              {
-                                  "rule_set":  "geosite-cn",
-                                  "server":  "local",
                                   "action":  "route"
                               },
                               {
