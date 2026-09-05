@@ -26,7 +26,7 @@
       "tag": "default"
     }
   ],
-"dns": {
+  "dns": {
     "servers": [
       {
         "tag": "dns_direct",
@@ -76,8 +76,7 @@
         "server": "dns_fakeip"
       }
     ],
-    "final": "dns_proxy",
-    "independent_cache": true
+    "final": "dns_proxy"
   },
   "inbounds": [
     {
