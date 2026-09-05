@@ -116,24 +116,8 @@
       },
       {
         "rule_set": [
-          "Reject"
-        ],
-        "action": "predefined"
-      },
-      {
-        "type": "logical",
-        "mode": "and",
-        "rules": [
-          {
-            "clash_mode": "AllowAds",
-            "invert": true
-          },
-          {
-            "rule_set": [
-              "Reject",
-              "Ads_AWAvenue"
-            ]
-          }
+          "Reject",
+          "Ads_AWAvenue"
         ],
         "action": "reject"
       },
@@ -472,19 +456,9 @@
         "outbound": "Proxy"
       },
       {
-        "type": "logical",
-        "mode": "and",
-        "rules": [
-          {
-            "clash_mode": "AllowAds",
-            "invert": true
-          },
-          {
-            "rule_set": [
-              "Reject",
-              "Ads_AWAvenue"
-            ]
-          }
+        "rule_set": [
+          "Reject",
+          "Ads_AWAvenue"
         ],
         "action": "reject"
       },
