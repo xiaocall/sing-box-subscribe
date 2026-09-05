@@ -19,6 +19,11 @@
       "default_mode": "Rule"
     }
   },
+  "http_clients": [
+    {
+      "tag": "default"
+    }
+  ],
   "dns": {
     "servers": [
       {
@@ -435,6 +440,7 @@
   ],
   "route": {
     "default_domain_resolver": "ali-udp",
+    "default_http_client": "default",
     "auto_detect_interface": true,
     "find_process": true,
     "final": "Proxy",
