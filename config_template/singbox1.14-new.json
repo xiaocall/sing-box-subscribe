@@ -24,7 +24,7 @@
       "tag": "default"
     }
   ],
-"dns": {
+  "dns": {
     "servers": [
       {
         "tag": "ali-dns",
@@ -139,20 +139,33 @@
       "type": "selector",
       "outbounds": [
         "Auto",
-        "NodeSelect",
+        "手动选择",
         "Direct"
       ],
       "default": "Auto",
       "interrupt_exist_connections": true
     },
     {
-      "tag": "NodeSelect",
+      "tag": "手动选择",
       "type": "selector",
       "outbounds": [
         "Direct",
         "{all}"
       ],
       "default": "Direct",
+      "interrupt_exist_connections": true
+    },
+    {
+      "tag": "漏网之鱼",
+      "type": "selector",
+      "outbounds": [
+        "Proxy",
+        "手动选择",
+        "Direct",
+        "Auto",
+        "{all}"
+      ],
+      "default": "Proxy",
       "interrupt_exist_connections": true
     },
     {
@@ -170,7 +183,7 @@
       "type": "selector",
       "outbounds": [
         "Proxy",
-        "NodeSelect",
+        "手动选择",
         "Auto",
         "Direct",
         "{all}"
@@ -183,7 +196,7 @@
       "type": "selector",
       "outbounds": [
         "Proxy",
-        "NodeSelect",
+        "手动选择",
         "Auto",
         "Direct",
         "{all}"
@@ -197,7 +210,7 @@
       "outbounds": [
         "Direct",
         "Proxy",
-        "NodeSelect",
+        "手动选择",
         "Auto",
         "{all}"
       ],
@@ -209,7 +222,7 @@
       "type": "selector",
       "outbounds": [
         "Proxy",
-        "NodeSelect",
+        "手动选择",
         "Auto",
         "Direct",
         "{all}"
@@ -222,7 +235,7 @@
       "type": "selector",
       "outbounds": [
         "Proxy",
-        "NodeSelect",
+        "手动选择",
         "Auto",
         "Direct",
         "{all}"
@@ -235,7 +248,7 @@
       "type": "selector",
       "outbounds": [
         "Proxy",
-        "NodeSelect",
+        "手动选择",
         "Auto",
         "Direct",
         "{all}"
@@ -249,7 +262,7 @@
       "outbounds": [
         "Direct",
         "Proxy",
-        "NodeSelect",
+        "手动选择",
         "Auto",
         "{all}"
       ],
@@ -261,7 +274,7 @@
       "type": "selector",
       "outbounds": [
         "Proxy",
-        "NodeSelect",
+        "手动选择",
         "Auto",
         "Direct",
         "{all}"
@@ -274,7 +287,7 @@
       "type": "selector",
       "outbounds": [
         "Proxy",
-        "NodeSelect",
+        "手动选择",
         "Auto",
         "Direct",
         "{all}"
@@ -287,7 +300,7 @@
       "type": "selector",
       "outbounds": [
         "Proxy",
-        "NodeSelect",
+        "手动选择",
         "Auto",
         "Direct",
         "{all}"
@@ -301,7 +314,7 @@
       "outbounds": [
         "Direct",
         "Proxy",
-        "NodeSelect",
+        "手动选择",
         "{all}"
       ],
       "default": "Direct",
@@ -309,11 +322,11 @@
     }
   ],
   "route": {
-    "default_domain_resolver": "ali-udp",
+    "default_domain_resolver": "ali-dns",
     "default_http_client": "default",
     "auto_detect_interface": true,
     "find_process": true,
-    "final": "Proxy",
+    "final": "漏网之鱼",
     "rules": [
       {
         "action": "sniff"
