@@ -35,12 +35,6 @@
         "domain_resolver": "dns_local"
       },
       {
-        "tag": "dns_proxy",
-        "type": "https",
-        "server": "8.8.8.8",
-        "detour": "节点选择"
-      },
-      {
         "tag": "dns_fakeip",
         "type": "fakeip",
         "inet4_range": "198.18.0.0/15",
@@ -69,14 +63,10 @@
         "server": "dns_direct"
       },
       {
-        "query_type": [
-          "A",
-          "AAAA"
-        ],
         "server": "dns_fakeip"
       }
     ],
-    "final": "dns_proxy"
+    "final": "dns_direct"
   },
   "inbounds": [
     {
