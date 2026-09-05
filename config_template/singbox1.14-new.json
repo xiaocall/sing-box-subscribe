@@ -26,14 +26,8 @@
       "tag": "default"
     }
   ],
-  "dns": {
+"dns": {
     "servers": [
-      {
-        "tag": "dns_fakeip",
-        "type": "fakeip",
-        "inet4_range": "198.18.0.0/15",
-        "inet6_range": "fc00::/18"
-      },
       {
         "tag": "dns_direct",
         "type": "https",
@@ -45,6 +39,12 @@
         "type": "https",
         "server": "8.8.8.8",
         "detour": "节点选择"
+      },
+      {
+        "tag": "dns_fakeip",
+        "type": "fakeip",
+        "inet4_range": "198.18.0.0/15",
+        "inet6_range": "fc00::/18"
       },
       {
         "tag": "dns_local",
@@ -76,7 +76,7 @@
         "server": "dns_fakeip"
       }
     ],
-    "final": "dns_fakeip",
+    "final": "dns_proxy",
     "independent_cache": true
   },
   "inbounds": [
