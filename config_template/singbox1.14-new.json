@@ -101,12 +101,6 @@
     ],
     "rules": [
       {
-        "rule_set": [
-          "Reject"
-        ],
-        "action": "predefined"
-      },
-      {
         "clash_mode": "Direct",
         "action": "route",
         "server": "local"
@@ -117,11 +111,14 @@
         "server": "remote"
       },
       {
+        "query_type": "HTTPS",
+        "action": "reject"
+      },
+      {
         "rule_set": [
-          "AppleCN"
+          "Reject"
         ],
-        "action": "route",
-        "server": "ali-doh"
+        "action": "predefined"
       },
       {
         "type": "logical",
@@ -139,6 +136,13 @@
           }
         ],
         "action": "reject"
+      },
+      {
+        "rule_set": [
+          "AppleCN"
+        ],
+        "action": "route",
+        "server": "ali-doh"
       },
       {
         "rule_set": [
@@ -199,10 +203,6 @@
         "action": "route",
         "server": "ali-udp",
         "timeout": "3s"
-      },
-      {
-        "query_type": "HTTPS",
-        "action": "reject"
       },
       {
         "domain_suffix": [
@@ -467,11 +467,9 @@
         "outbound": "Direct"
       },
       {
-        "rule_set": [
-          "AppleCN"
-        ],
+        "clash_mode": "Global",
         "action": "route",
-        "outbound": "Direct"
+        "outbound": "Proxy"
       },
       {
         "type": "logical",
@@ -489,6 +487,13 @@
           }
         ],
         "action": "reject"
+      },
+      {
+        "rule_set": [
+          "AppleCN"
+        ],
+        "action": "route",
+        "outbound": "Direct"
       },
       {
         "rule_set": [
