@@ -29,44 +29,55 @@
   "dns": {
     "servers": [
       {
-        "tag": "google",
+        "tag": "dns_fakeip",
+        "type": "fakeip",
+        "inet4_range": "198.18.0.0/15",
+        "inet6_range": "fc00::/18"
+      },
+      {
+        "tag": "dns_direct",
+        "type": "https",
+        "server": "223.5.5.5",
+        "domain_resolver": "dns_local"
+      },
+      {
+        "tag": "dns_proxy",
         "type": "https",
         "server": "8.8.8.8",
         "detour": "节点选择"
       },
       {
-        "tag": "ali",
-        "type": "https",
-        "server": "223.5.5.5"
-      },
-      {
-        "tag": "fakeip",
-        "type": "fakeip",
-        "inet4_range": "198.18.0.0/15",
-        "inet6_range": "fc00::/18"
+        "tag": "dns_local",
+        "type": "local"
       }
     ],
     "rules": [
       {
+        "query_type": "HTTPS",
+        "action": "reject"
+      },
+      {
         "clash_mode": "Direct",
-        "server": "ali"
+        "server": "dns_direct"
       },
       {
         "clash_mode": "Global",
-        "server": "google"
+        "server": "dns_fakeip"
       },
       {
         "rule_set": "geosite-cn",
-        "server": "ali"
+        "server": "dns_direct"
       },
       {
         "query_type": [
           "A",
           "AAAA"
         ],
-        "server": "fakeip"
+        "server": "dns_fakeip"
       }
-    ]
+    ],
+    "final": "dns_fakeip",
+    "independent_cache": true
   },
   "inbounds": [
     {
@@ -76,7 +87,8 @@
         "fdfe:dcba:9876::1/126"
       ],
       "auto_route": true,
-      "strict_route": true
+      "strict_route": true,
+      "stack": "mixed"
     },
     {
       "type": "mixed",
@@ -190,9 +202,7 @@
   ],
   "route": {
     "auto_detect_interface": true,
-    "default_domain_resolver": {
-      "server": "ali"
-    },
+    "default_domain_resolver": "dns_direct",
     "default_http_client": "default",
     "final": "节点选择",
     "rules": [
