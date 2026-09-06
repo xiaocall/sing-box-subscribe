@@ -24,8 +24,7 @@
       {
         "tag": "dns-direct",
         "type": "udp",
-        "server": "223.5.5.5",
-        "detour": "direct"
+        "server": "223.5.5.5"
       },
       {
         "tag": "hosts",
@@ -45,8 +44,7 @@
         "tag": "alidns",
         "type": "https",
         "server": "dns.alidns.com",
-        "domain_resolver": "hosts",
-        "detour": "direct"
+        "domain_resolver": "hosts"
       },
       {
         "tag": "ggdns",
