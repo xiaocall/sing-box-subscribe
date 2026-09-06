@@ -72,6 +72,21 @@
         "action": "route"
       },
       {
+        "domain": [
+          "cloudflare-ech.com"
+        ],
+        "server": "dns-direct",
+        "action": "route"
+      },
+      {
+        "query_type": [
+          "HTTPS",
+          "SVCB"
+        ],
+        "server": "dns-direct",
+        "action": "route"
+      },
+      {
         "rule_set": "geosite-cn",
         "server": "alidns",
         "action": "route"
@@ -94,7 +109,7 @@
         "action": "route"
       }
     ],
-    "final": "ggdns",
+    "final": "dns-direct",
     "strategy": "prefer_ipv4",
     "optimistic": true
   },
