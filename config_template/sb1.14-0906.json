@@ -22,8 +22,10 @@
   "dns": {
     "servers": [
       {
-        "tag": "local",
-        "type": "local"
+        "tag": "dns-direct",
+        "type": "udp",
+        "server": "223.5.5.5",
+        "detour": "direct"
       },
       {
         "tag": "hosts",
@@ -43,7 +45,8 @@
         "tag": "alidns",
         "type": "https",
         "server": "dns.alidns.com",
-        "domain_resolver": "hosts"
+        "domain_resolver": "hosts",
+        "detour": "direct"
       },
       {
         "tag": "ggdns",
@@ -62,7 +65,7 @@
     "rules": [
       {
         "clash_mode": "direct",
-        "server": "local",
+        "server": "dns-direct",
         "action": "route"
       },
       {
@@ -310,7 +313,7 @@
       "outbounds": [
         "{all}"
       ],
-      "url": "http://www.gstatic.com/generate_204",
+      "url": "https://www.gstatic.com/generate_204",
       "interval": "10m",
       "tolerance": 50
     },
@@ -331,7 +334,7 @@
   ],
   "route": {
     "default_domain_resolver": {
-      "server": "local"
+      "server": "dns-direct"
     },
     "default_http_client": "default",
     "auto_detect_interface": true,
