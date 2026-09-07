@@ -29,13 +29,13 @@
   "dns": {
     "servers": [
       {
-        "tag": "google",
+        "tag": "proxyDns",
         "type": "https",
         "server": "8.8.8.8",
         "detour": "节点选择"
       },
       {
-        "tag": "ali",
+        "tag": "directDns",
         "type": "https",
         "server": "223.5.5.5",
         "detour": "直连"
@@ -50,15 +50,15 @@
     "rules": [
       {
         "clash_mode": "Direct",
-        "server": "ali"
+        "server": "directDns"
       },
       {
         "clash_mode": "Global",
-        "server": "google"
+        "server": "proxyDns"
       },
       {
         "rule_set": "geosite-cn",
-        "server": "ali"
+        "server": "directDns"
       },
       {
         "query_type": [
@@ -188,12 +188,12 @@
     {
       "tag": "block",
       "type": "block"
-    },
+    }
   ],
   "route": {
     "auto_detect_interface": true,
     "default_domain_resolver": {
-      "server": "ali"
+      "server": "directDns"
     },
     "default_http_client": "default",
     "final": "节点选择",
