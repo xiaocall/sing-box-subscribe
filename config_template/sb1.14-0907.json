@@ -42,7 +42,8 @@
       {
         "tag": "fakeip",
         "type": "fakeip",
-        "inet4_range": "198.18.0.0/15"
+        "inet4_range": "198.18.0.0/15",
+        "inet6_range": "fc00::/18"
       }
     ],
     "rules": [
@@ -196,9 +197,7 @@
   ],
   "route": {
     "auto_detect_interface": true,
-    "default_domain_resolver": {
-      "server": "directDns"
-    },
+    "default_domain_resolver": "directDns",
     "default_http_client": "default",
     "final": "节点选择",
     "rules": [
@@ -219,7 +218,16 @@
         "action": "hijack-dns"
       },
       {
-        "ip_is_private": true,
+        "ip_cidr": [
+          "10.0.0.0/8",
+          "172.16.0.0/12",
+          "192.168.0.0/16",
+          "127.0.0.0/8",
+          "169.254.0.0/16",
+          "::1/128",
+          "fe80::/10"
+        ],
+        "action": "route",
         "outbound": "直连"
       },
       {
@@ -246,14 +254,17 @@
       },
       {
         "clash_mode": "Direct",
+        "action": "route",
         "outbound": "直连"
       },
       {
         "clash_mode": "Global",
+        "action": "route",
         "outbound": "节点选择"
       },
       {
         "rule_set": "geosite-github",
+        "action": "route",
         "outbound": "Github"
       },
       {
@@ -261,14 +272,17 @@
           "geoip-google",
           "geosite-google"
         ],
+        "action": "route",
         "outbound": "Google"
       },
       {
         "rule_set": "geosite-microsoft",
+        "action": "route",
         "outbound": "Microsoft"
       },
       {
         "rule_set": "geosite-ai",
+        "action": "route",
         "outbound": "AI"
       },
       {
@@ -276,6 +290,7 @@
           "geoip-telegram",
           "geosite-telegram"
         ],
+        "action": "route",
         "outbound": "Telegram"
       },
       {
@@ -283,15 +298,27 @@
           "geoip-twitter",
           "geosite-twitter"
         ],
+        "action": "route",
         "outbound": "Twitter"
       },
       {
         "rule_set": "geosite-youtube",
+        "action": "route",
         "outbound": "Youtube"
       },
       {
         "rule_set": "geosite-cn",
+        "action": "route",
         "outbound": "国内"
+      },
+      {
+        "rule_set": "geoip-cn",
+        "action": "route",
+        "outbound": "国内"
+      },
+      {
+        "ip_version": 6,
+        "action": "reject"
       }
     ],
     "rule_set": [
@@ -376,3 +403,663 @@
     ]
   }
 }
+```查阅 [sing-box 官方 Route 章节](https://sing-box.sagernet.org/zh/configuration/route/) 与 [Route Rule 章节](https://sing-box.sagernet.org/zh/configuration/route/rule/)，导致“网页顶部抓出中国 IP、但 DNS 测试属于节点”的核心原因在于 **`route` 规则中的三次匹配穿透与回退**：
+
+### 核心原因分析
+
+1. **`fc00::/18` 误中 `ip_is_private` 规则**：
+   官方文档中 `ip_is_private` 匹配标准包含 RFC 4193 的 `fc00::/7`。当测试站分配到 IPv6 Fake-IP 时，直接被该规则捕获并分流到 `直连`，导致网页连接暴露中国 IPv6。
+2. **商业节点缺乏 IPv6 出口导致系统旁路回退**：
+   大部分机场节点仅支持 IPv4 转发。当浏览器通过 IPv6 发起连接且节点不可达时，Windows 会退回物理网卡的原生 IPv6 进行直连。
+3. **官方规范的防护动作**：
+   在 Route 规则中，国内域名与 IP 先行放行（保留国内 IPv6 原生速度），随后针对其余境外流量直接执行 `{ "ip_version": 6, "action": "reject" }`，促使浏览器触发 RFC 8305（Happy Eyeballs）瞬时切换为 IPv4 走代理隧道。
+
+---
+
+### 修正后的完整配置
+
+```json
+{
+  "$schema": "https://sing-box.sagernet.org/schema.json",
+  "log": {
+    "level": "info",
+    "timestamp": true
+  },
+  "experimental": {
+    "cache_file": {
+      "enabled": true,
+      "store_fakeip": true,
+      "store_dns": true
+    },
+    "clash_api": {
+      "external_controller": "127.0.0.1:9090",
+      "access_control_allow_origin": [
+        "http://127.0.0.1",
+        "https://yacd.metacubex.one",
+        "https://metacubex.github.io",
+        "https://metacubexd.pages.dev",
+        "https://board.zash.run.place"
+      ]
+    }
+  },
+  "http_clients": [
+    {
+      "tag": "default"
+    }
+  ],
+  "dns": {
+    "servers": [
+      {
+        "tag": "proxyDns",
+        "type": "https",
+        "server": "8.8.8.8",
+        "detour": "节点选择"
+      },
+      {
+        "tag": "directDns",
+        "type": "https",
+        "server": "223.5.5.5"
+      },
+      {
+        "tag": "fakeip",
+        "type": "fakeip",
+        "inet4_range": "198.18.0.0/15",
+        "inet6_range": "fc00::/18"
+      }
+    ],
+    "rules": [
+      {
+        "query_type": "HTTPS",
+        "action": "reject"
+      },
+      {
+        "clash_mode": "Direct",
+        "server": "directDns"
+      },
+      {
+        "clash_mode": "Global",
+        "server": "proxyDns"
+      },
+      {
+        "rule_set": "geosite-cn",
+        "server": "directDns"
+      },
+      {
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
+        "server": "fakeip"
+      }
+    ],
+    "final": "proxyDns"
+  },
+  "inbounds": [
+    {
+      "type": "tun",
+      "address": [
+        "172.18.0.1/30",
+        "fdfe:dcba:9876::1/126"
+      ],
+      "auto_route": true,
+      "strict_route": true,
+      "stack": "system"
+    },
+    {
+      "type": "mixed",
+      "listen": "::",
+      "listen_port": 7890
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "节点选择",
+      "type": "selector",
+      "outbounds": [
+        "自动选择",
+        "直连",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "自动选择",
+      "type": "urltest",
+      "outbounds": [
+        "{all}"
+      ],
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": "3m",
+      "tolerance": 50
+    },
+    {
+      "tag": "Google",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "自动选择",
+        "直连",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "Youtube",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "自动选择",
+        "直连",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "Telegram",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "自动选择",
+        "直连",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "Twitter",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "自动选择",
+        "直连",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "Github",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "自动选择",
+        "直连",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "Microsoft",
+      "type": "selector",
+      "outbounds": [
+        "直连",
+        "节点选择",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "AI",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "自动选择",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "国内",
+      "type": "selector",
+      "outbounds": [
+        "直连",
+        "节点选择"
+      ]
+    },
+    {
+      "tag": "直连",
+      "type": "direct"
+    },
+    {
+      "tag": "block",
+      "type": "block"
+    }
+  ],
+  "route": {
+    "auto_detect_interface": true,
+    "default_domain_resolver": "directDns",
+    "default_http_client": "default",
+    "final": "节点选择",
+    "rules": [
+      {
+        "action": "sniff"
+      },
+      {
+        "type": "logical",
+        "mode": "or",
+        "rules": [
+          {
+            "protocol": "dns"
+          },
+          {
+            "port": 53
+          }
+        ],
+        "action": "hijack-dns"
+      },
+      {
+        "ip_cidr": [
+          "10.0.0.0/8",
+          "172.16.0.0/12",
+          "192.168.0.0/16",
+          "127.0.0.0/8",
+          "169.254.0.0/16",
+          "::1/128",
+          "fe80::/10"
+        ],
+        "action": "route",
+        "outbound": "直连"
+      },
+      {
+        "type": "logical",
+        "mode": "or",
+        "rules": [
+          {
+            "port": 853
+          },
+          {
+            "network": "udp",
+            "port": 443
+          },
+          {
+            "protocol": "stun"
+          }
+        ],
+        "action": "reject"
+      },
+      {
+        "rule_set": "anti-ad",
+        "clash_mode": "Rule",
+        "action": "reject"
+      },
+      {
+        "clash_mode": "Direct",
+        "action": "route",
+        "outbound": "直连"
+      },
+      {
+        "clash_mode": "Global",
+        "action": "route",
+        "outbound": "节点选择"
+      },
+      {
+        "rule_set": "geosite-github",
+        "action": "route",
+        "outbound": "Github"
+      },
+      {
+        "rule_set": [
+          "geoip-google",
+          "geosite-google"
+        ],
+        "action": "route",
+        "outbound": "Google"
+      },
+      {
+        "rule_set": "geosite-microsoft",
+        "action": "route",
+        "outbound": "Microsoft"
+      },
+      {
+        "rule_set": "geosite-ai",
+        "action": "route",
+        "outbound": "AI"
+      },
+      {
+        "rule_set": [
+          "geoip-telegram",
+          "geosite-telegram"
+        ],
+        "action": "route",
+        "outbound": "Telegram"
+      },
+      {
+        "rule_set": [
+          "geoip-twitter",
+          "geosite-twitter"
+        ],
+        "action": "route",
+        "outbound": "Twitter"
+      },
+      {
+        "rule_set": "geosite-youtube",
+        "action": "route",
+        "outbound": "Youtube"
+      },
+      {
+        "rule_set": "geosite-cn",
+        "action": "route",
+        "outbound": "国内"
+      },
+      {
+        "rule_set": "geoip-cn",
+        "action": "route",
+        "outbound": "国内"
+      },
+      {
+        "ip_version": 6,
+        "action": "reject"
+      }
+    ],
+    "rule_set": [
+      {
+        "tag": "anti-ad",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://anti-ad.net/anti-ad-sing-box.srs"
+      },
+      {
+        "tag": "geosite-github",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/github.srs"
+      },
+      {
+        "tag": "geoip-google",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/google.srs"
+      },
+      {
+        "tag": "geosite-google",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/google.srs"
+      },
+      {
+        "tag": "geosite-microsoft",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/microsoft.srs"
+      },
+      {
+        "tag": "geosite-ai",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/category-ai-!cn@!cn.srs"
+      },
+      {
+        "tag": "geoip-telegram",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/telegram.srs"
+      },
+      {
+        "tag": "geosite-telegram",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/telegram.srs"
+      },
+      {
+        "tag": "geoip-twitter",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/twitter.srs"
+      },
+      {
+        "tag": "geosite-twitter",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/twitter.srs"
+      },
+      {
+        "tag": "geosite-youtube",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/youtube.srs"
+      },
+      {
+        "tag": "geosite-cn",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/cn.srs"
+      },
+      {
+        "tag": "geoip-cn",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/cn.srs"
+      }
+    ]
+  }
+}
+```对照 [sing-box 官方 Route（路由）章节](https://sing-box.sagernet.org/zh/configuration/route/)、[Route Rule（路由规则）](https://sing-box.sagernet.org/zh/configuration/route/rule/) 与 [Rule Action（规则动作）](https://sing-box.sagernet.org/zh/configuration/route/rule_action/) 文档，导致**“DNS 解析已正确走节点，但页面顶部依然显示中国真实 IP”**的根本原因出在 **`route` 模块的匹配机制与动作定义**上：
+
+---
+
+### 一、 官方 Route 文档核心问题剖析
+
+1. **WebRTC STUN 探测穿透代理获取了真实物理 IP**
+   * 按照 [Protocol Sniff（协议探测）](https://sing-box.sagernet.org/zh/configuration/route/sniff/) 与官方客户端手册标准，`dnsleaktest.com`、`ipleak.net` 等测试站点会在网页前端通过 JavaScript 触发 **WebRTC STUN 探测包**。
+   * STUN 协议会绕过常规代理隧道，直接探测物理网卡的公网 IP。官方实践要求在路由最前端对 `protocol: "stun"` 以及 `udp: 443 (QUIC)` 显式执行 `"action": "reject"`。
+2. **`ip_is_private` 误判 IPv6 Fake-IP 为局域网流量并强制直连**
+   * 在官方文档的默认字段逻辑中，`ip_is_private` 遵循 RFC 4193 标准，包含了 `fc00::/7`。当测试站点被分配到 IPv6 Fake-IP（`fc00::/18`）时，直接命中了 `ip_is_private` 规则，被路由引擎判定为局域网流量**强制走“直连”出站**，从而暴露了中国真实 IP。
+   * **修补方法**：将通配的 `ip_is_private` 替换为显式指定的私网与本地回环 `ip_cidr`（如 `10.0.0.0/8`, `192.168.0.0/16`, `127.0.0.0/8`, `::1/128`, `fe80::/10` 等），精准排除对 Fake-IP 的误判。
+3. **商业节点缺乏 IPv6 出口触发系统级直连回退**
+   * 大多数机场节点不支持 IPv6 出站。当浏览器通过 IPv6 访问海外测试站而节点无法连通时，Windows 系统会自动退回物理网卡的原生 IPv6 直连。
+   * **官方规范对策**：在国内规则（`geosite-cn` / `geoip-cn`）正常放行、保障国内 IPv6 速度的前提下，在所有国内规则之后紧跟一条：
+     ```json
+     {
+       "ip_version": 6,
+       "action": "reject"
+     }
+     ```
+     只要是**境外非直连流量**尝试走 IPv6，sing-box 在路由层立即返回 TCP RST 拒绝。浏览器（依据 RFC 8305 规范）会瞬间无感降级为 IPv4 走代理隧道，从根本上阻断物理网卡 IPv6 泄露。
+4. **规范 1.14+ 版本的 Rule Action 语法**
+   * 官方明确指出 `outbound` 字段在 1.11.0 起已废弃，所有出站路由规则需规范书写为 `{ "action": "route", "outbound": "..." }`。
+
+---
+
+### 二、 核心修正：`route` 模块完整配置
+
+请将配置中的 `route` 模块替换为以下符合官方最新规范的代码块：
+
+```json
+  "route": {
+    "auto_detect_interface": true,
+    "default_domain_resolver": "directDns",
+    "default_http_client": "default",
+    "final": "节点选择",
+    "rules": [
+      {
+        "action": "sniff"
+      },
+      {
+        "type": "logical",
+        "mode": "or",
+        "rules": [
+          {
+            "protocol": "dns"
+          },
+          {
+            "port": 53
+          }
+        ],
+        "action": "hijack-dns"
+      },
+      {
+        "ip_cidr": [
+          "10.0.0.0/8",
+          "172.16.0.0/12",
+          "192.168.0.0/16",
+          "127.0.0.0/8",
+          "169.254.0.0/16",
+          "::1/128",
+          "fe80::/10"
+        ],
+        "action": "route",
+        "outbound": "直连"
+      },
+      {
+        "type": "logical",
+        "mode": "or",
+        "rules": [
+          {
+            "port": 853
+          },
+          {
+            "network": "udp",
+            "port": 443
+          },
+          {
+            "protocol": "stun"
+          }
+        ],
+        "action": "reject"
+      },
+      {
+        "rule_set": "anti-ad",
+        "clash_mode": "Rule",
+        "action": "reject"
+      },
+      {
+        "clash_mode": "Direct",
+        "action": "route",
+        "outbound": "直连"
+      },
+      {
+        "clash_mode": "Global",
+        "action": "route",
+        "outbound": "节点选择"
+      },
+      {
+        "rule_set": "geosite-github",
+        "action": "route",
+        "outbound": "Github"
+      },
+      {
+        "rule_set": [
+          "geoip-google",
+          "geosite-google"
+        ],
+        "action": "route",
+        "outbound": "Google"
+      },
+      {
+        "rule_set": "geosite-microsoft",
+        "action": "route",
+        "outbound": "Microsoft"
+      },
+      {
+        "rule_set": "geosite-ai",
+        "action": "route",
+        "outbound": "AI"
+      },
+      {
+        "rule_set": [
+          "geoip-telegram",
+          "geosite-telegram"
+        ],
+        "action": "route",
+        "outbound": "Telegram"
+      },
+      {
+        "rule_set": [
+          "geoip-twitter",
+          "geosite-twitter"
+        ],
+        "action": "route",
+        "outbound": "Twitter"
+      },
+      {
+        "rule_set": "geosite-youtube",
+        "action": "route",
+        "outbound": "Youtube"
+      },
+      {
+        "rule_set": "geosite-cn",
+        "action": "route",
+        "outbound": "国内"
+      },
+      {
+        "rule_set": "geoip-cn",
+        "action": "route",
+        "outbound": "国内"
+      },
+      {
+        "ip_version": 6,
+        "action": "reject"
+      }
+    ],
+    "rule_set": [
+      {
+        "tag": "anti-ad",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://anti-ad.net/anti-ad-sing-box.srs"
+      },
+      {
+        "tag": "geosite-github",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/github.srs"
+      },
+      {
+        "tag": "geoip-google",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/google.srs"
+      },
+      {
+        "tag": "geosite-google",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/google.srs"
+      },
+      {
+        "tag": "geosite-microsoft",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/microsoft.srs"
+      },
+      {
+        "tag": "geosite-ai",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/category-ai-!cn@!cn.srs"
+      },
+      {
+        "tag": "geoip-telegram",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/telegram.srs"
+      },
+      {
+        "tag": "geosite-telegram",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/telegram.srs"
+      },
+      {
+        "tag": "geoip-twitter",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/twitter.srs"
+      },
+      {
+        "tag": "geosite-twitter",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/twitter.srs"
+      },
+      {
+        "tag": "geosite-youtube",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/youtube.srs"
+      },
+      {
+        "tag": "geosite-cn",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geosite/cn.srs"
+      },
+      {
+        "tag": "geoip-cn",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://cdn.jsdmirror.com/gh/perfect-panel/rules/geo/geoip/cn.srs"
+      }
+    ]
+  }
