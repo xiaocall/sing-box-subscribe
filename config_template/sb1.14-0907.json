@@ -1,4 +1,3 @@
-
 {
   "$schema": "https://sing-box.sagernet.org/schema.json",
   "log": {
@@ -9,7 +8,7 @@
     "cache_file": {
       "enabled": true,
       "store_fakeip": true,
-      "store_dns": true
+      "store_rdrc": true
     },
     "clash_api": {
       "external_controller": "127.0.0.1:9090",
@@ -38,7 +37,8 @@
       {
         "tag": "ali",
         "type": "https",
-        "server": "223.5.5.5"
+        "server": "223.5.5.5",
+        "detour": "直连"
       },
       {
         "tag": "fakeip",
@@ -85,7 +85,115 @@
       "listen_port": 7890
     }
   ],
-  "outbounds": "{all}",
+  "outbounds": [
+    {
+      "tag": "节点选择",
+      "type": "selector",
+      "outbounds": [
+        "自动选择",
+        "直连",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "自动选择",
+      "type": "urltest",
+      "outbounds": [
+        "{all}"
+      ],
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": "3m",
+      "tolerance": 50
+    },
+    {
+      "tag": "Google",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "自动选择",
+        "直连",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "Youtube",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "自动选择",
+        "直连",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "Telegram",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "自动选择",
+        "直连",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "Twitter",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "自动选择",
+        "直连",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "Github",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "自动选择",
+        "直连",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "Microsoft",
+      "type": "selector",
+      "outbounds": [
+        "直连",
+        "节点选择",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "AI",
+      "type": "selector",
+      "outbounds": [
+        "节点选择",
+        "自动选择",
+        "{all}"
+      ]
+    },
+    {
+      "tag": "国内",
+      "type": "selector",
+      "outbounds": [
+        "直连",
+        "节点选择"
+      ]
+    },
+    {
+      "tag": "直连",
+      "type": "direct"
+    },
+    {
+      "tag": "block",
+      "type": "block"
+    },
+    {
+      "tag": "dns-out",
+      "type": "dns"
+    }
+  ],
   "route": {
     "auto_detect_interface": true,
     "default_domain_resolver": {
