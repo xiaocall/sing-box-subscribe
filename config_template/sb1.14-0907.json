@@ -37,8 +37,7 @@
       {
         "tag": "directDns",
         "type": "https",
-        "server": "223.5.5.5",
-        "detour": "直连"
+        "server": "223.5.5.5"
       },
       {
         "tag": "fakeip",
