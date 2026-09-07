@@ -48,6 +48,10 @@
     ],
     "rules": [
       {
+        "query_type": "HTTPS",
+        "action": "reject"
+      },
+      {
         "clash_mode": "Direct",
         "server": "directDns"
       },
@@ -66,7 +70,8 @@
         ],
         "server": "fakeip"
       }
-    ]
+    ],
+    "final": "proxyDns"
   },
   "inbounds": [
     {
@@ -76,7 +81,8 @@
         "fdfe:dcba:9876::1/126"
       ],
       "auto_route": true,
-      "strict_route": true
+      "strict_route": true,
+      "stack": "system"
     },
     {
       "type": "mixed",
@@ -201,7 +207,7 @@
         "action": "sniff"
       },
       {
-        "protocol": "dns",
+        "port": 53,
         "action": "hijack-dns"
       },
       {
@@ -259,10 +265,11 @@
         "outbound": "Youtube"
       },
       {
-        "rule_set": [
-          "geoip-cn",
-          "geosite-cn"
-        ],
+        "rule_set": "geosite-cn",
+        "outbound": "国内"
+      },
+      {
+        "rule_set": "geoip-cn",
         "outbound": "国内"
       }
     ],
