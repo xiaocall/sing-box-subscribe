@@ -43,7 +43,7 @@
         "tag": "fakeip",
         "type": "fakeip",
         "inet4_range": "198.18.0.0/15",
-        "inet6_range": "fc00::/18"
+        "inet6_range": "2001:2::/48"
       }
     ],
     "rules": [
@@ -71,8 +71,7 @@
         "server": "fakeip"
       }
     ],
-    "final": "proxyDns",
-    "independent_cache": true
+    "final": "proxyDns"
   },
   "inbounds": [
     {
@@ -198,7 +197,9 @@
   ],
   "route": {
     "auto_detect_interface": true,
-    "default_domain_resolver": "directDns",
+    "default_domain_resolver": {
+      "server": "directDns"
+    },
     "default_http_client": "default",
     "final": "节点选择",
     "rules": [
@@ -206,35 +207,28 @@
         "action": "sniff"
       },
       {
-        "protocol": "dns",
-        "action": "hijack-dns"
-      },
-      {
         "port": 53,
         "action": "hijack-dns"
       },
       {
         "ip_is_private": true,
-        "action": "route",
         "outbound": "直连"
       },
       {
+        "rule_set": "anti-ad",
+        "clash_mode": "Rule",
+        "action": "reject"
+      },
+      {
         "clash_mode": "Direct",
-        "action": "route",
         "outbound": "直连"
       },
       {
         "clash_mode": "Global",
-        "action": "route",
         "outbound": "节点选择"
       },
       {
-        "rule_set": "anti-ad",
-        "action": "reject"
-      },
-      {
         "rule_set": "geosite-github",
-        "action": "route",
         "outbound": "Github"
       },
       {
@@ -242,17 +236,14 @@
           "geoip-google",
           "geosite-google"
         ],
-        "action": "route",
         "outbound": "Google"
       },
       {
         "rule_set": "geosite-microsoft",
-        "action": "route",
         "outbound": "Microsoft"
       },
       {
         "rule_set": "geosite-ai",
-        "action": "route",
         "outbound": "AI"
       },
       {
@@ -260,7 +251,6 @@
           "geoip-telegram",
           "geosite-telegram"
         ],
-        "action": "route",
         "outbound": "Telegram"
       },
       {
@@ -268,22 +258,18 @@
           "geoip-twitter",
           "geosite-twitter"
         ],
-        "action": "route",
         "outbound": "Twitter"
       },
       {
         "rule_set": "geosite-youtube",
-        "action": "route",
         "outbound": "Youtube"
       },
       {
         "rule_set": "geosite-cn",
-        "action": "route",
         "outbound": "国内"
       },
       {
         "rule_set": "geoip-cn",
-        "action": "route",
         "outbound": "国内"
       }
     ],
