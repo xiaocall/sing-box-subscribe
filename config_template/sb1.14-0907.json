@@ -42,8 +42,7 @@
       {
         "tag": "fakeip",
         "type": "fakeip",
-        "inet4_range": "198.18.0.0/15",
-        "inet6_range": "fc00::/18"
+        "inet4_range": "198.18.0.0/15"
       }
     ],
     "rules": [
@@ -64,10 +63,11 @@
         "server": "directDns"
       },
       {
-        "query_type": [
-          "A",
-          "AAAA"
-        ],
+        "query_type": "AAAA",
+        "action": "reject"
+      },
+      {
+        "query_type": "A",
         "server": "fakeip"
       }
     ],
