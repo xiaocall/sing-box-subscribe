@@ -119,7 +119,7 @@
             "mtu": 1400,
             "stack": "mixed",
             "auto_route": true,
-            "strict_route": false,
+            "strict_route": true,
             "platform":
             {
                 "http_proxy":
