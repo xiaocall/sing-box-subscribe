@@ -119,12 +119,12 @@
             "mtu": 1400,
             "stack": "mixed",
             "auto_route": true,
-            "strict_route": true,
+            "strict_route": false,
             "platform":
             {
                 "http_proxy":
                 {
-                    "enabled": true,
+                    "enabled": false,
                     "server": "127.0.0.1",
                     "server_port": 7890
                 }
