@@ -408,6 +408,11 @@
                 "action": "reject"
             },
             {
+                "network": "udp",
+                "port": 443,
+                "action": "reject"
+            },
+            {
                 "clash_mode": "direct",
                 "outbound": "direct",
                 "action": "route"
