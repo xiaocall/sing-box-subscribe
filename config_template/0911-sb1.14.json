@@ -1,0 +1,295 @@
+{
+  "$schema": "https://sing-box.sagernet.org/schema.json",
+  "log": {
+    "level": "info",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "type": "https",
+        "tag": "doh-cn",
+        "server": "223.5.5.5",
+        "server_port": 443,
+        "tls": {
+          "enabled": true,
+          "server_name": "dns.alidns.com"
+        },
+        "path": "/dns-query"
+      },
+      {
+        "type": "https",
+        "tag": "doh-proxy",
+        "detour": "Proxy",
+        "server": "1.1.1.1",
+        "server_port": 443,
+        "tls": {
+          "enabled": true,
+          "server_name": "cloudflare-dns.com"
+        },
+        "path": "/dns-query"
+      },
+      {
+        "type": "https",
+        "tag": "doh-global",
+        "detour": "Global",
+        "server": "1.1.1.1",
+        "server_port": 443,
+        "tls": {
+          "enabled": true,
+          "server_name": "cloudflare-dns.com"
+        },
+        "path": "/dns-query"
+      },
+      {
+        "type": "fakeip",
+        "tag": "fakeip",
+        "inet4_range": "11.0.0.0/8",
+        "inet6_range": "2608:120::/32"
+      }
+    ],
+    "rules": [
+      {
+        "clash_mode": "direct",
+        "server": "doh-cn"
+      },
+      {
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
+        "clash_mode": "global",
+        "server": "fakeip"
+      },
+      {
+        "clash_mode": "global",
+        "server": "doh-global"
+      },
+      {
+        "clash_mode": "rule",
+        "rule_set": "geosite-geolocation-cn",
+        "server": "doh-cn"
+      },
+      {
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
+        "clash_mode": "rule",
+        "server": "fakeip"
+      }
+    ],
+    "final": "doh-proxy",
+    "strategy": "prefer_ipv6",
+    "timeout": "10s",
+    "cache_capacity": 4096
+  },
+  "http_clients": [
+    {
+      "tag": "rule-set-http",
+      "version": 2,
+      "detour": "Proxy",
+      "stream_receive_window": 0,
+      "connection_receive_window": 0
+    }
+  ],
+  "inbounds": [
+    {
+      "type": "tun",
+      "tag": "tun-in",
+      "mtu": 9000,
+      "address": [
+        "172.19.0.1/30",
+        "fdfe:dcba:9876::1/126"
+      ],
+      "dns_mode": "hijack",
+      "auto_route": true,
+      "strict_route": true,
+      "route_exclude_address": [
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16"
+      ]
+    },
+    {
+      "type": "mixed",
+      "tag": "mixed-in",
+      "listen": "127.0.0.1",
+      "listen_port": 2080
+    }
+  ],
+  "outbounds": [
+
+    {
+      "type": "selector",
+      "tag": "Proxy",
+      "outbounds": [
+        "节点01",
+        "direct"
+      ],
+      "default": "节点01",
+      "interrupt_exist_connections": true
+    },
+    {
+      "type": "selector",
+      "tag": "YouTube",
+      "outbounds": [
+        "节点01",
+        "direct"
+      ],
+      "default": "节点01",
+      "interrupt_exist_connections": true
+    },
+    {
+      "type": "selector",
+      "tag": "国际AI",
+      "outbounds": [
+        "节点01",
+        "direct"
+      ],
+      "default": "节点01",
+      "interrupt_exist_connections": true
+    },
+    {
+      "type": "selector",
+      "tag": "中国AI",
+      "outbounds": [
+        "节点01",
+        "direct"
+      ],
+      "default": "direct",
+      "interrupt_exist_connections": true
+    },
+    {
+      "type": "selector",
+      "tag": "Global",
+      "outbounds": [
+        "节点01",
+        "direct"
+      ],
+      "default": "节点01",
+      "interrupt_exist_connections": true
+    },
+    {
+      "type": "direct",
+      "tag": "direct"
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "action": "sniff"
+      },
+      {
+        "protocol": "dns",
+        "action": "hijack-dns"
+      },
+      {
+        "ip_is_private": true,
+        "outbound": "direct"
+      },
+      {
+        "clash_mode": "direct",
+        "outbound": "direct"
+      },
+      {
+        "clash_mode": "global",
+        "outbound": "Global"
+      },
+      {
+        "clash_mode": "rule",
+        "rule_set": "geosite-youtube",
+        "outbound": "YouTube"
+      },
+      {
+        "clash_mode": "rule",
+        "rule_set": "geosite-category-ai-!cn",
+        "outbound": "国际AI"
+      },
+      {
+        "clash_mode": "rule",
+        "rule_set": "geosite-category-ai-cn",
+        "outbound": "中国AI"
+      },
+      {
+        "clash_mode": "rule",
+        "rule_set": "geosite-google",
+        "outbound": "Proxy"
+      },
+      {
+        "clash_mode": "rule",
+        "rule_set": "geosite-geolocation-cn",
+        "outbound": "direct"
+      },
+      {
+        "clash_mode": "rule",
+        "rule_set": "geoip-cn",
+        "outbound": "direct"
+      }
+    ],
+    "rule_set": [
+      {
+        "type": "remote",
+        "tag": "geosite-geolocation-cn",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-geolocation-cn.srs",
+        "http_client": "rule-set-http",
+        "update_interval": "24h0m0s"
+      },
+      {
+        "type": "remote",
+        "tag": "geoip-cn",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geoip/rule-set/geoip-cn.srs",
+        "http_client": "rule-set-http",
+        "update_interval": "24h0m0s"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-google",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-google.srs",
+        "http_client": "rule-set-http",
+        "update_interval": "24h0m0s"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-category-ai-!cn",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-category-ai-%21cn.srs",
+        "http_client": "rule-set-http",
+        "update_interval": "24h0m0s"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-category-ai-cn",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-category-ai-cn.srs",
+        "http_client": "rule-set-http",
+        "update_interval": "24h0m0s"
+      },
+      {
+        "type": "remote",
+        "tag": "geosite-youtube",
+        "url": "https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-youtube.srs",
+        "http_client": "rule-set-http",
+        "update_interval": "24h0m0s"
+      }
+    ],
+    "final": "Proxy",
+    "auto_detect_interface": true,
+    "default_domain_resolver": {
+      "server": "doh-proxy",
+      "strategy": "prefer_ipv6"
+    }
+  },
+  "experimental": {
+    "cache_file": {
+      "enabled": true,
+      "path": "cache-windows-dual.db",
+      "cache_id": "sing-box-1.14.0-beta.12-windows-dual",
+      "store_fakeip": true,
+      "store_dns": true
+    },
+    "clash_api": {
+      "external_controller": "127.0.0.1:9090",
+      "secret": "114514",
+      "default_mode": "rule"
+    }
+  }
+}
