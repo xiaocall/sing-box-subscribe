@@ -4,6 +4,14 @@
     "cache_file": {
       "enabled": true,
       "store_dns": true
+    },
+    "clash_api": {
+      "external_controller": "127.0.0.1:9090",
+      "external_ui": "ui",
+      "secret": "",
+      "external_ui_download_url": "https://gh-proxy.com/https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
+      "external_ui_download_detour": "Direct-Out",
+      "default_mode": "rule"
     }
   },
   "log": {
@@ -13,22 +21,16 @@
   "dns": {
     "servers": [
       {
-        "tag": "cn_bootstrap",
+        "tag": "cn_dns",
         "type": "udp",
         "server": "223.5.5.5",
         "server_port": 53
       },
       {
-        "tag": "cn_dns",
-        "type": "tls",
-        "server": "223.5.5.5",
-        "server_port": 853
-      },
-      {
         "tag": "proxy_dns",
-        "type": "tls",
+        "type": "tcp",
         "server": "8.8.8.8",
-        "server_port": 853,
+        "server_port": 53,
         "detour": "Proxy"
       }
     ],
@@ -89,15 +91,8 @@
       "enabled": true,
       "timeout": "3d"
     },
-    "timeout": "10s"
+    "timeout": "5s"
   },
-  "http_clients": [
-    {
-      "tag": "rule-set-direct",
-      "version": 2,
-      "domain_resolver": "cn_bootstrap"
-    }
-  ],
   "inbounds": [
     {
       "type": "tun",
@@ -129,8 +124,8 @@
         "{all}"
       ],
       "interval": "3m",
-      "tolerance": 30,
-      "url": "https://cp.cloudflare.com/generate_204"
+      "tolerance": 50,
+      "url": "http://www.gstatic.com/generate_204"
     },
     {
       "type": "selector",
@@ -217,15 +212,13 @@
     },
     {
       "type": "direct",
-      "tag": "Direct-Out",
-      "domain_resolver": "cn_dns"
+      "tag": "Direct-Out"
     }
   ],
   "route": {
     "final": "Final",
     "auto_detect_interface": true,
-    "default_http_client": "rule-set-direct",
-    "default_domain_resolver": "proxy_dns",
+    "default_domain_resolver": "cn_dns",
     "rules": [
       {
         "action": "sniff",
@@ -233,10 +226,9 @@
           "http",
           "tls",
           "quic",
-          "dns",
-          "bittorrent"
+          "dns"
         ],
-        "timeout": "500ms"
+        "timeout": "300ms"
       },
       {
         "type": "logical",
