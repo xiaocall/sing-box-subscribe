@@ -120,7 +120,7 @@
                 "action": "route"
             }
         ],
-        "final": "ggdns",
+        "final": "local",
         "strategy": "prefer_ipv4"
     },
     "inbounds":
