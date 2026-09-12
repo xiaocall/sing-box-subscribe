@@ -65,10 +65,22 @@
                 "type": "fakeip",
                 "inet4_range": "198.18.0.0/15",
                 "inet6_range": "fc00::/18"
+            },
+            {
+                "tag": "ech-dns",
+                "type": "udp",
+                "server": "1.1.1.1"
             }
         ],
         "rules":
         [
+            {
+        "domain": [
+          "cloudflare-ech.com"
+        ],
+        "server": "ech-dns",
+        "action": "route"
+      },
             {
                 "clash_mode": "direct",
                 "server": "local",
